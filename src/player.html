@@ -58,6 +58,10 @@
   const playButton = document.querySelector('#toggle-play');
   const muteButton = document.querySelector('#toggle-mute');
   const volume = document.querySelector('#volume');
+  // Some browsers leave volume entirely to the device controls.
+  audio.volume = 0.5;
+  volume.hidden = audio.volume !== 0.5;
+  audio.volume = 1;
   let listening = false;
   let connection = 0;
   function updateStatus(state, message) {
@@ -111,6 +115,14 @@
     else { audio.muted = !audio.muted; }
   });
   volume.addEventListener('input', () => { audio.volume = Number(volume.value) / 100; audio.muted = false; });
+  volume.addEventListener('wheel', event => {
+    if (volume.hidden || event.ctrlKey || event.deltaY === 0) return;
+    event.preventDefault();
+    const level = audio.muted ? 0 : Math.round(audio.volume * 100);
+    audio.volume = Math.max(0, Math.min(100, level - Math.sign(event.deltaY) * 5)) / 100;
+    audio.muted = false;
+    updateVolume();
+  }, { passive: false });
   audio.addEventListener('volumechange', updateVolume);
   audio.addEventListener('playing', () => {
     if (!listening || audio.paused) return;
