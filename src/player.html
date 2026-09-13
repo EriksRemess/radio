@@ -46,7 +46,7 @@
           <path d="M11 4 6 8H2v8h4l5 4z"/><path id="volume-icon" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>
         </svg>
       </button>
-      <input id="volume" type="range" min="0" max="100" value="100" aria-label="Volume" title="Volume">
+      <input id="volume" type="range" min="0" max="100" value="100" aria-label="Volume" title="Volume" hidden>
     </div>
   </div>
   <noscript><p>Enable JavaScript to use the player.</p></noscript>
@@ -58,10 +58,14 @@
   const playButton = document.querySelector('#toggle-play');
   const muteButton = document.querySelector('#toggle-mute');
   const volume = document.querySelector('#volume');
-  // Some browsers leave volume entirely to the device controls.
-  audio.volume = 0.5;
-  volume.hidden = audio.volume !== 0.5;
-  audio.volume = 1;
+  // iOS can accept volume assignments without changing the output level.
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  if (!ios) {
+    audio.volume = 0.5;
+    volume.hidden = audio.volume !== 0.5;
+    audio.volume = 1;
+  }
   let listening = false;
   let connection = 0;
   function updateStatus(state, message) {
