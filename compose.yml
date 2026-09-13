@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Containerfile
-    image: ghcr.io/eriksremess/linein-radio:latest
+    image: ghcr.io/eriksremess/radio:latest
     container_name: radio
     restart: unless-stopped
     devices:

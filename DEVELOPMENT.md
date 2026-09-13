@@ -46,7 +46,7 @@ AAC includes ID3 title metadata; the web player disables it with `?metadata=0` f
 
 [The workflow](.github/workflows/container.yml) runs the checks, then builds AMD64
 and ARM64 images. Pull requests only test and build. It publishes to
-`ghcr.io/eriksremess/linein-radio`:
+`ghcr.io/eriksremess/radio`:
 
 - `main` → `latest`
 - Version tags: `v0.1.0` → `0.1.0`
@@ -55,6 +55,4 @@ and ARM64 images. Pull requests only test and build. It publishes to
 Manual runs publish only from `main` or a `v*` tag. Authentication uses the automatic
 `GITHUB_TOKEN` with `packages: write`; no extra secret is needed.
 
-If the GHCR package belongs to the old repository, grant `EriksRemess/radio` write
-access in its **Manage Actions access** settings. Make the package public for
-anonymous pulls.
+Make the package public for anonymous pulls.
