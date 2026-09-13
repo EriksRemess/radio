@@ -1,0 +1,16 @@
+services:
+  radio:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: ghcr.io/eriksremess/linein-radio:latest
+    container_name: radio
+    restart: unless-stopped
+    devices:
+      - /dev/snd:/dev/snd
+    group_add:
+      - keep-groups
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./radio.conf:/app/radio.conf:ro
