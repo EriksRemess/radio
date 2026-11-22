@@ -128,7 +128,10 @@ fn error_response(stream: &mut TcpStream, status: &str) -> io::Result<()> {
     } else {
         ""
     };
-    write!(stream, "HTTP/1.1 {status}\r\nConnection: close\r\nContent-Length: 0\r\nCache-Control: no-store\r\n{allow}\r\n")
+    write!(
+        stream,
+        "HTTP/1.1 {status}\r\nConnection: close\r\nContent-Length: 0\r\nCache-Control: no-store\r\n{allow}\r\n"
+    )
 }
 
 fn escape_html(value: &str) -> String {
@@ -184,7 +187,11 @@ pub fn serve(
     };
     if request.path == "/" {
         let page = player(config);
-        write!(stream, "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\n\r\n", page.len())?;
+        write!(
+            stream,
+            "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\n\r\n",
+            page.len()
+        )?;
         if !request.head {
             stream.write_all(page.as_bytes())?;
         }
@@ -200,7 +207,11 @@ pub fn serve(
     };
     // A close-delimited body works with HTTP/1.0 radio players and HTTP/1.1 clients.
     // Titles are carried in cached format headers, without ICY metadata.
-    write!(stream, "HTTP/1.1 200 OK\r\nContent-Type: {}\r\nConnection: close\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\nX-Accel-Buffering: no\r\n\r\n", codec.content_type())?;
+    write!(
+        stream,
+        "HTTP/1.1 200 OK\r\nContent-Type: {}\r\nConnection: close\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\nX-Accel-Buffering: no\r\n\r\n",
+        codec.content_type()
+    )?;
     if request.head {
         return Ok(());
     }

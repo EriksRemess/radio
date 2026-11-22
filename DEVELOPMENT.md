@@ -4,7 +4,7 @@ For running and configuring the radio, see [README.md](README.md).
 
 ## Build and run
 
-Requires Linux, Rust 1.88+, and FFmpeg with ALSA input and the `aac`, `libmp3lame`,
+Requires Linux, Rust 1.100+, and FFmpeg with ALSA input and the `aac`, `libmp3lame`,
 and `libopus` encoders. There are no Cargo dependencies.
 
 ```sh

@@ -10,12 +10,14 @@ use config::Config;
 use std::{
     env,
     io::{self, BufReader},
+    mem::DropGuard,
     net::TcpListener,
     path::PathBuf,
     process::ExitCode,
     sync::{
+        Arc,
         atomic::{AtomicUsize, Ordering},
-        mpsc, Arc,
+        mpsc,
     },
     thread,
     time::{Duration, Instant},
@@ -49,13 +51,6 @@ Requires Linux and FFmpeg with aac, libmp3lame and libopus encoders.
 SIGINT/SIGTERM stop the server and encoder.
 ";
 
-struct ClientSlot(Arc<AtomicUsize>);
-impl Drop for ClientSlot {
-    fn drop(&mut self) {
-        self.0.fetch_sub(1, Ordering::Relaxed);
-    }
-}
-
 fn run(config: Config) -> io::Result<()> {
     signals::install()?;
     let listener = TcpListener::bind(config.listen)?;
@@ -74,7 +69,7 @@ fn run(config: Config) -> io::Result<()> {
                 .spawn(move || {
                     let producer = &producers[index];
                     let mut output = BufReader::new(output);
-                    let result = (|| -> io::Result<()> {
+                    let Err(error) = (|| -> io::Result<!> {
                         producer.set_headers(codec.read_headers(&mut output)?);
                         loop {
                             producer.publish(codec.read_frame(&mut output)?);
@@ -82,9 +77,8 @@ fn run(config: Config) -> io::Result<()> {
                     })();
                     producer.close();
                     let _ = done_tx.send(io::Error::other(format!(
-                        "{} stream ended: {}",
-                        codec.name(),
-                        result.unwrap_err()
+                        "{} stream ended: {error}",
+                        codec.name()
                     )));
                 })?,
         );
@@ -118,7 +112,7 @@ fn run(config: Config) -> io::Result<()> {
         match done_rx.try_recv() {
             Ok(error) => break Err(error),
             Err(mpsc::TryRecvError::Disconnected) => {
-                break Err(io::Error::other("encoder readers stopped"))
+                break Err(io::Error::other("encoder readers stopped"));
             }
             Err(mpsc::TryRecvError::Empty) => {}
         }
@@ -144,7 +138,9 @@ fn run(config: Config) -> io::Result<()> {
                     continue;
                 }
                 clients.fetch_add(1, Ordering::Relaxed);
-                let slot = ClientSlot(Arc::clone(&clients));
+                let slot = DropGuard::new(Arc::clone(&clients), |clients| {
+                    clients.fetch_sub(1, Ordering::Relaxed);
+                });
                 let config = Arc::clone(&config);
                 let broadcasts = Arc::clone(&broadcasts);
                 if let Err(error) =

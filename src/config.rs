@@ -97,7 +97,9 @@ impl Config {
                 || mount.split('/').any(|part| matches!(part, "." | ".."))
                 || mount.len() > 1024
             {
-                return Err(format!("{mount_key} must be an ASCII URL path other than /, without percent escapes, query, fragment or . and .. segments"));
+                return Err(format!(
+                    "{mount_key} must be an ASCII URL path other than /, without percent escapes, query, fragment or . and .. segments"
+                ));
             }
             let bitrate = bitrate(get(bitrate_key, default_bitrate), bitrate_key, min, max)?;
             Ok(StreamConfig {

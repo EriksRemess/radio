@@ -316,16 +316,20 @@ fn http_responses_and_fragmented_request() {
         ("SOURCE /stream.ogg HTTP/1.0\r\n\r\n", 405),
         ("GET /stream.aac HTTP/1.1\r\n\r\n", 400),
     ] {
-        assert!(server
-            .request(request.as_bytes())
-            .starts_with(&format!("HTTP/1.1 {status}")));
+        assert!(
+            server
+                .request(request.as_bytes())
+                .starts_with(&format!("HTTP/1.1 {status}"))
+        );
     }
     // Exactly the limit, so the peer has no unread excess data that could cause a TCP reset.
     let prefix = "GET / HTTP/1.0\r\nX: ";
     let oversized = format!("{prefix}{}", "a".repeat(8192 - prefix.len()));
-    assert!(server
-        .request(oversized.as_bytes())
-        .starts_with("HTTP/1.1 431"));
+    assert!(
+        server
+            .request(oversized.as_bytes())
+            .starts_with("HTTP/1.1 431")
+    );
     let mut stream = server.connect();
     stream.write_all(b"HEAD /stream.aac HTTP/1.0\r\n").unwrap();
     thread::sleep(Duration::from_millis(20));
@@ -382,9 +386,11 @@ fn encoder_failure_and_stall_are_fatal() {
         fs::set_permissions(&fake, fs::Permissions::from_mode(0o755)).unwrap();
         let mut server = Server::start(&[("PATH", temp.0.to_str().unwrap())]);
         let children = if wait == 12 {
-            assert!(server
-                .request(b"HEAD /stream.aac HTTP/1.0\r\n\r\n")
-                .starts_with("HTTP/1.1 503"));
+            assert!(
+                server
+                    .request(b"HEAD /stream.aac HTTP/1.0\r\n\r\n")
+                    .starts_with("HTTP/1.1 503")
+            );
             server.children()
         } else {
             Vec::new()
@@ -417,9 +423,11 @@ fn custom_stream_mount_is_used() {
         assert!(Instant::now() < deadline, "{}", server.log());
         thread::sleep(Duration::from_millis(20));
     }
-    assert!(server
-        .request(b"GET /stream.mp3 HTTP/1.0\r\n\r\n")
-        .starts_with("HTTP/1.1 404"));
+    assert!(
+        server
+            .request(b"GET /stream.mp3 HTTP/1.0\r\n\r\n")
+            .starts_with("HTTP/1.1 404")
+    );
     let page = server.request(b"GET / HTTP/1.0\r\n\r\n");
     for mount in ["/live.aac?metadata=0", "/live.mp3", "/live.ogg"] {
         assert!(page.contains(&format!("value=\"{mount}\"")));
