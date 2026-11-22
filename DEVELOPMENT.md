@@ -19,7 +19,7 @@ omit it to capture line-in. Stop with Ctrl-C. `radio.local.conf` is ignored by G
 To build and test the container without sound hardware:
 
 ```sh
-podman build -t localhost/linein-radio:dev .
+podman build --pull=always -t localhost/linein-radio:dev .
 podman run --rm -p 8000:8000 localhost/linein-radio:dev --test-tone
 ```
 
@@ -29,10 +29,11 @@ podman run --rm -p 8000:8000 localhost/linein-radio:dev --test-tone
 cargo fmt --check
 cargo clippy --offline --locked --all-targets -- -D warnings
 cargo test --offline --locked -- --include-ignored
+node --test tests/player.mjs
 ```
 
-Tests require FFmpeg, ffprobe, and local sockets. Physical line-in capture needs
-a connected source.
+Tests require FFmpeg, ffprobe, local sockets, and Node.js 18+ for player checks.
+Physical line-in capture needs a connected source.
 
 ## Implementation
 

@@ -525,8 +525,14 @@ fn decode(server: &Server, audio: &[u8], format: &str, codec: &str, rate: u32, c
     ] {
         assert!(info.lines().any(|line| line == field), "{info}");
     }
-    let output = Command::new("ffmpeg")
-        .args(["-v", "error", "-i"])
+    let mut command = Command::new("ffmpeg");
+    command.args(["-v", "error"]);
+    if codec == "opus" {
+        // The native decoder can emit duplicate drain timestamps for low-bitrate SILK.
+        command.args(["-c:a", "libopus"]);
+    }
+    let output = command
+        .arg("-i")
         .arg(path)
         .args(["-f", "s16le", "pipe:1"])
         .output()
@@ -534,7 +540,7 @@ fn decode(server: &Server, audio: &[u8], format: &str, codec: &str, rate: u32, c
     assert!(output.status.success());
     assert!(
         output.stderr.is_empty(),
-        "{}",
+        "{format}, {rate} Hz, {channels} channels: {}",
         String::from_utf8_lossy(&output.stderr)
     );
     let samples = output.stdout.as_chunks::<2>().0;
@@ -588,15 +594,19 @@ fn mp3_and_ogg_decode_before_and_after_ring_rollover() {
 #[test]
 #[ignore = "requires FFmpeg, ffprobe and loopback sockets"]
 fn alternate_rates_and_mono_decode_at_bitrate_limits() {
-    for (rate, channels, aac_bitrate, opus_bitrate) in [
-        (32000, 1, "192k", "256k"),
-        (44100, 1, "264600", "256k"),
-        (32000, 2, "384k", "510k"),
+    for (rate, channels, aac_bitrate, mp3_bitrate, opus_bitrate) in [
+        (32000, 1, "192k", "192k", "256k"),
+        (44100, 1, "264600", "192k", "256k"),
+        (32000, 2, "384k", "192k", "510k"),
+        (48000, 2, "512k", "320k", "510k"),
+        (48000, 2, "16k", "32k", "6k"),
+        (32000, 1, "16k", "32k", "6k"),
     ] {
         let server = Server::start(&[
             ("sample_rate", &rate.to_string()),
             ("channels", &channels.to_string()),
             ("aac_bitrate", aac_bitrate),
+            ("mp3_bitrate", mp3_bitrate),
             ("opus_bitrate", opus_bitrate),
         ]);
         server.ready();

@@ -32,6 +32,7 @@ jobs:
           cargo +stable fmt --check
           cargo +stable clippy --offline --locked --all-targets -- -D warnings
           cargo +stable test --offline --locked -- --include-ignored
+          node --test tests/player.mjs
 
   container:
     needs: test

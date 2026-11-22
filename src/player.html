@@ -110,7 +110,7 @@
     updatePlayButton();
     updateStatus('waiting', 'Connecting…');
     try { await audio.play(); }
-    catch (error) { if (attempt === connection && error.name !== 'AbortError') failed(); }
+    catch { if (attempt === connection) failed(); }
   }
   format.addEventListener('change', () => { if (listening) connect(); });
   playButton.addEventListener('click', () => { if (listening) stop(); else connect(); });
